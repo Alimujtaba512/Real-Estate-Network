@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Real Estate Network</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            background-color: #f0f0f0;
+        }
+        .container {
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        .add-property-btn {
+            display: inline-block;
+            margin-bottom: 20px;
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .export-btn {
+            display: inline-block;
+            margin-bottom: 20px;
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+        .property-form {
+            display: none;
+            margin-bottom: 20px;
+        }
+        .property-form.show {
+            display: block;
+        }
+        .property-form label {
+            font-weight: bold;
+        }
+        .property-form input[type="text"],
+        .property-form select {
+            width: 100%;
+            margin-bottom: 10px;
+            padding: 8px;
+            box-sizing: border-box;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+        .property-form input[type="submit"] {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 10px 20px;
+            cursor: pointer;
+        }
+        .property-list {
+            list-style-type: none;
+            padding: 0;
+        }
+        .property-item {
+            margin-bottom: 10px;
+            padding: 10px;
+            background-color: #f2f2f2;
+            border-radius: 5px;
+        }
+        .bedrooms-select,
+        .bathrooms-select {
+            width: 100%;
+            padding: 8px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            margin-bottom: 10px;
+        }
+        .phone-container {
+            margin-bottom: 10px;
+        }
+        .phone-input {
+            display: inline-block;
+            width: calc(100% - 40px);
+            margin-right: 10px;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        .add-phone-btn {
+            display: inline-block;
+            width: 40px;
+            padding: 8px;
+            text-align: center;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Real Estate Network</h1>
+        <button class="add-property-btn" onclick="showPropertyForm()">Add Property</button>
+        <button class="export-btn" onclick="exportProperties()">Export Properties</button>
+        <form class="property-form" id="propertyForm" onsubmit="addProperty(event)">
+            <label for="propertyID">Property ID:</label>
+            <input type="text" id="propertyID" name="propertyID" required><br>
+            <label for="propertyName">Property Name:</label>
+            <input type="text" id="propertyName" name="propertyName" required><br>
+            <label for="propertyType">Property Type:</label>
+            <select id="propertyType" name="propertyType" onchange="toggleBedroomsBathroomsSelect()" required>
+                <option value="">Select Type</option>
+                <option value="House">House</option>
+                <option value="Apartment">Apartment</option>
+                <option value="Flat">Flat</option>
+                <option value="Plot">Plot</option>
+                <option value="Portion">Portion</option>
+            </select><br>
+            <label for="bedrooms" id="bedroomsLabel" class="bedrooms-select">Number of Bedrooms:</label>
+            <select id="bedrooms" name="bedrooms" class="bedrooms-select">
+                <!-- Options for bedrooms will be added dynamically -->
+            </select><br>
+            <label for="bathrooms" id="bathroomsLabel" class="bathrooms-select">Number of Bathrooms:</label>
+            <select id="bathrooms" name="bathrooms" class="bathrooms-select">
+                <!-- Options for bathrooms will be added dynamically -->
+            </select><br>
+            <label for="whatsapp">WhatsApp:</label>
+            <select id="whatsapp" name="whatsapp" required>
+                <option value="">Select Option</option>
+                <option value="Yes">Yes</option>
+                <option value="No">No</option>
+            </select><br>
+            <div class="phone-container">
+                <label>Phone Numbers:</label>
+                <div id="phoneInputs"></div>
+                <button type="button" class="add-phone-btn" onclick="addPhoneInput()">+</button>
+            </div>
+            <label for="propertyLocation">Property Location:</label>
+            <input type="text" id="propertyLocation" name="propertyLocation" required><br>
+            <input type="submit" value="Add Property">
+        </form>
+        <ul class="property-list" id="propertyList">
+            <!-- Property items will be added here -->
+        </ul>
+    </div>
+
+    <script>
+        // Function to export properties to a text file
+        function exportProperties() {
+            // Get properties from localStorage
+            var properties = JSON.parse(localStorage.getItem('properties')) || [];
+
+            // Create a text file content with property details
+            var textContent = "Properties:\n";
+            properties.forEach(function(property, index) {
+                textContent += "Property " + (index + 1) + ":\n";
+                textContent += "ID: " + property.id + "\n";
+                textContent += "Name: " + property.name + "\n";
+                textContent += "Type: " + property.type + "\n";
+                textContent += "Location: " + property.location + "\n";
+                textContent += "Bedrooms: " + property.bedrooms + "\n";
+                textContent += "Bathrooms: " + property.bathrooms + "\n";
+                textContent += "WhatsApp: " + property.whatsapp + "\n";
+                textContent += "Phone Numbers: " + property.phoneNumbers.join(", ") + "\n\n";
+            });
+
+            // Create a blob with the text content
+            var blob = new Blob([textContent], { type: "text/plain;charset=utf-8" });
+
+            // Create a link element to download the text file
+            var a = document.createElement("a");
+            a.href = URL.createObjectURL(blob);
+            a.download = "properties.txt";
+
+            // Append the link to the body and trigger the click event to download the file
+            document.body.appendChild(a);
+            a.click();
+
+            // Clean up by removing the link element
+            document.body.removeChild(a);
+        }
+
+        // Rest of your JavaScript code
+        
+        // Function to dynamically add options for number of bedrooms select
+        function generateBedroomsOptions() {
+            var bedroomsSelect = document.getElementById("bedrooms");
+            for (var i = 1; i <= 50; i++) {
+                var option = document.createElement("option");
+                option.text = i;
+                option.value = i;
+                bedroomsSelect.add(option);
+            }
+        }
+
+        // Function to dynamically add options for number of bathrooms select
+        function generateBathroomsOptions() {
+            var bathroomsSelect = document.getElementById("bathrooms");
+            for (var i = 1; i <= 10; i++) {
+                var option = document.createElement("option");
+                option.text = i;
+                option.value = i;
+                bathroomsSelect.add(option);
+            }
+        }
+
+        // Call functions to generate options for bedrooms and bathrooms select
+        generateBedroomsOptions();
+        generateBathroomsOptions();
+
+        // Function to dynamically add phone number input field
+        function addPhoneInput() {
+            var phoneContainer = document.getElementById("phoneInputs");
+            var phoneInput = document.createElement("input");
+            phoneInput.type = "text";
+            phoneInput.className = "phone-input";
+            phoneInput.placeholder = "Phone number";
+            phoneContainer.appendChild(phoneInput);
+
+            // Check if the number of phone inputs is equal to or more than 5, then hide the add button
+            if (phoneContainer.childElementCount >= 5) {
+                var addButton = document.querySelector(".add-phone-btn");
+                addButton.style.display = "none";
+            }
+        }
+
+        // Function to show or hide bedrooms and bathrooms select based on property type
+        function toggleBedroomsBathroomsSelect() {
+            var propertyType = document.getElementById("propertyType").value;
+            var bedroomsSelect = document.getElementById("bedrooms");
+            var bedroomsLabel = document.getElementById("bedroomsLabel");
+            var bathroomsSelect = document.getElementById("bathrooms");
+            var bathroomsLabel = document.getElementById("bathroomsLabel");
+            
+            if (propertyType === "Plot") {
+                bedroomsSelect.style.display = "none";
+                bedroomsLabel.style.display = "none";
+                bathroomsSelect.style.display = "none";
+                bathroomsLabel.style.display = "none";
+            } else {
+                bedroomsSelect.style.display = "block";
+                bedroomsLabel.style.display = "block";
+                bathroomsSelect.style.display = "block";
+                bathroomsLabel.style.display = "block";
+            }
+        }
+
+        // Function to handle form submission and add property
+        function addProperty(event) {
+            event.preventDefault();
+            
+            var propertyID = document.getElementById("propertyID").value;
+            var propertyName = document.getElementById("propertyName").value;
+            var propertyType = document.getElementById("propertyType").value;
+            var propertyLocation = document.getElementById("propertyLocation").value;
+            var bedrooms = document.getElementById("bedrooms").value;
+            var bathrooms = document.getElementById("bathrooms").value;
+            var whatsapp = document.getElementById("whatsapp").value;
+
+            var phoneNumbers = [];
+            var phoneInputs = document.querySelectorAll(".phone-input");
+            phoneInputs.forEach(function(input) {
+                if (input.value.trim() !== "") {
+                    phoneNumbers.push(input.value.trim());
+                }
+            });
+
+            var property = {
+                id: propertyID,
+                name: propertyName,
+                type: propertyType,
+                location: propertyLocation,
+                bedrooms: bedrooms,
+                bathrooms: bathrooms,
+                whatsapp: whatsapp,
+                phoneNumbers: phoneNumbers
+            };
+
+            // Get existing properties from localStorage or initialize empty array
+            var properties = JSON.parse(localStorage.getItem('properties')) || [];
+            properties.push(property);
+
+            // Save properties to localStorage
+            localStorage.setItem('properties', JSON.stringify(properties));
+
+            // Render property list
+            renderPropertyList(properties);
+
+            // Clear form fields after adding property
+            document.getElementById("propertyID").value = "";
+            document.getElementById("propertyName").value = "";
+            document.getElementById("propertyType").value = "";
+            document.getElementById("bedrooms").value = "";
+            document.getElementById("bathrooms").value = "";
+            document.getElementById("whatsapp").value = "";
+            document.getElementById("propertyLocation").value = "";
+
+            // Clear phone number input fields
+            var phoneContainer = document.getElementById("phoneInputs");
+            phoneContainer.innerHTML = "";
+
+            // Show the add button
+            var addButton = document.querySelector(".add-phone-btn");
+            addButton.style.display = "inline-block";
+
+            // Hide the property form after adding property
+            var propertyForm = document.getElementById("propertyForm");
+            propertyForm.classList.remove("show");
+        }
+
+        // Function to show property form
+        function showPropertyForm() {
+            var propertyForm = document.getElementById("propertyForm");
+            propertyForm.classList.toggle("show");
+            // Ensure that bedrooms and bathrooms select are properly displayed when showing the form
+            toggleBedroomsBathroomsSelect();
+        }
+
+        // Function to render property list
+        function renderPropertyList(properties) {
+            var propertyList = document.getElementById("propertyList");
+            propertyList.innerHTML = "";
+            properties.forEach(function(property) {
+                var propertyItem = document.createElement("li");
+                propertyItem.classList.add("property-item");
+                propertyItem.innerHTML = "<strong>ID:</strong> " + property.id + ", <strong>Name:</strong> " + property.name + ", <strong>Type:</strong> " + property.type + ", <strong>Location:</strong> " + property.location + ", <strong>Bedrooms:</strong> " + property.bedrooms + ", <strong>Bathrooms:</strong> " + property.bathrooms + ", <strong>WhatsApp:</strong> " + property.whatsapp + ", <strong>Phone Numbers:</strong> " + property.phoneNumbers.join(", ");
+                propertyList.appendChild(propertyItem);
+            });
+        }
+
+        // Load properties from localStorage on page load
+        var storedProperties = JSON.parse(localStorage.getItem('properties')) || [];
+        renderPropertyList(storedProperties);
+    </script>
+</body>
+</html>
